@@ -8,6 +8,10 @@ def animate_orbit(file_path, speed=20):
     # Загружаем данные
     data = pd.read_csv(file_path)
 
+    # Извлекаем время
+    t_values = data["t"].values
+    T = t_values[-1]  # Предполагаем, что последний момент времени — полный оборот Луны
+
     # Инициализируем график
     fig, ax = plt.subplots(figsize=(8, 8))
     ax.set_xlim(-1.5, 1.5)
@@ -25,7 +29,7 @@ def animate_orbit(file_path, speed=20):
     ax.plot(moon_orbit_x, moon_orbit_y, linestyle="dashed", color="gray", label="Орбита Луны")
 
     # Земля
-    earth = ax.scatter(0, 0, color="blue", s=200, label="Земля")
+    ax.scatter(0, 0, color="blue", s=200, label="Земля")
 
     # Луна (будет двигаться)
     moon, = ax.plot([], [], "o", color="gray", markersize=8, label="Луна")
@@ -36,7 +40,7 @@ def animate_orbit(file_path, speed=20):
     # Линия траектории тела
     trajectory, = ax.plot([], [], "r-", lw=1)
 
-    # Значительно увеличиваем шаг (ускоряем в speed раз)
+    # Значительно увеличиваем шаг (ускоряем анимацию)
     step = max(1, len(data) // (speed * 50))
 
     # Обновление кадра
@@ -45,14 +49,18 @@ def animate_orbit(file_path, speed=20):
         if idx >= len(data):
             return body, trajectory, moon
 
+        t = t_values[idx]  # Берем текущее время из данных
+
         # Двигаем тело
         body.set_data(data["x"][idx], data["y"][idx])
 
         # Обновляем линию траектории
         trajectory.set_data(data["x"][:idx], data["y"][:idx])
 
-        # Ускоряем вращение Луны (вместо idx / len(data), просто frame * step)
-        moon.set_data(np.cos(2 * np.pi * frame * step / len(data)), np.sin(2 * np.pi * frame * step / len(data)))
+        # Луна движется по окружности с учетом времени t
+        moon_x = np.cos(2 * np.pi * t / T)
+        moon_y = np.sin(2 * np.pi * t / T)
+        moon.set_data(moon_x, moon_y)
 
         return body, trajectory, moon
 
@@ -70,5 +78,9 @@ if __name__ == "__main__":
         sys.exit(1)
 
     file_path = sys.argv[1]
-    speed = int(sys.argv[2]) if len(sys.argv) > 2 else 20  # Теперь по умолчанию в 20 раз быстрее
-    animate_orbit(file_path, speed)
+    
+    if len(sys.argv) > 2:
+        speed = int(sys.argv[2]) 
+        animate_orbit(file_path, speed)
+    else:
+        animate_orbit(file_path)
