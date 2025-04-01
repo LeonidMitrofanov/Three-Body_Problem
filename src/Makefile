@@ -29,7 +29,7 @@ FORMAT_PATH := ../materials/linters/.clang-format
 
 all: build
 
-requirements:
+req-install:
 	@pip install -r $(REQUIREMENTS_PATH)
 
 $(LIB_TARGET): $(ODESOLVER_SRC)
@@ -47,6 +47,8 @@ $(MAIN_TARGET): $(MAIN_TARGET).cpp $(LIB_TARGET)
 	@$(CC) $(CFLAGS) $(LDFLAGS) -o $@ $< $(LDLIBS)
 
 build: $(LIB_TARGET) $(MAIN_TARGET) $(TEST_TARGET)
+
+run: run_test run_main
 
 run_test: $(TEST_TARGET)
 	@./$(TEST_TARGET)
@@ -69,12 +71,10 @@ animation: $(CSV)
 	@echo "Анимируем движение тела..."
 	@$(ANIMATE_ORBITE) $(CSV)
 
-# Форматирование кода
 format: check-style
 	@echo "Форматирование исходного кода с помощью clang-format..."
 	@clang-format -i -style=file:$(FORMAT_PATH) $(TO_FORMAT_FILES)
 
-# Проверка стиля кода
 check-style:
 	@echo "Проверка стиля кода с помощью clang-format..."
 	@clang-format -n -style=file:$(FORMAT_PATH) $(TO_FORMAT_FILES)
