@@ -10,7 +10,7 @@ def animate_orbit(file_path, speed=20):
 
     # Извлекаем время
     t_values = data["t"].values
-    T = t_values[-1]  # Предполагаем, что последний момент времени — полный оборот Луны
+    T = t_values[-1]  # Полный оборот Луны
 
     # Инициализируем график
     fig, ax = plt.subplots(figsize=(8, 8))
@@ -40,7 +40,7 @@ def animate_orbit(file_path, speed=20):
     # Линия траектории тела
     trajectory, = ax.plot([], [], "r-", lw=1)
 
-    # Значительно увеличиваем шаг (ускоряем анимацию)
+    # Увеличиваем шаг для ускорения анимации
     step = max(1, len(data) // (speed * 50))
 
     # Обновление кадра
@@ -49,22 +49,22 @@ def animate_orbit(file_path, speed=20):
         if idx >= len(data):
             return body, trajectory, moon
 
-        t = t_values[idx]  # Берем текущее время из данных
+        t = t_values[idx]
 
-        # Двигаем тело
-        body.set_data(data["x"][idx], data["y"][idx])
+        # Двигаем тело - передаём как списки из одного элемента
+        body.set_data([data["x"][idx]], [data["y"][idx]])
 
         # Обновляем линию траектории
         trajectory.set_data(data["x"][:idx], data["y"][:idx])
 
-        # Луна движется по окружности с учетом времени t
+        # Луна движется по окружности
         moon_x = np.cos(2 * np.pi * t / T)
         moon_y = np.sin(2 * np.pi * t / T)
-        moon.set_data(moon_x, moon_y)
+        moon.set_data([moon_x], [moon_y])  # Также передаём как списки
 
         return body, trajectory, moon
 
-    # Количество кадров теперь меньше
+    # Количество кадров
     frames = len(data) // step
     ani = animation.FuncAnimation(fig, update, frames=frames, interval=5, blit=True)
 
@@ -78,9 +78,5 @@ if __name__ == "__main__":
         sys.exit(1)
 
     file_path = sys.argv[1]
-    
-    if len(sys.argv) > 2:
-        speed = int(sys.argv[2]) 
-        animate_orbit(file_path, speed)
-    else:
-        animate_orbit(file_path)
+    speed = int(sys.argv[2]) if len(sys.argv) > 2 else 20
+    animate_orbit(file_path, speed)

@@ -21,9 +21,6 @@ def plot_orbit(file_path):
     # Рисуем Землю в центре
     plt.scatter(0, 0, color="blue", s=200, label="Земля")
 
-    # Рисуем Луну на орбите (приблизительное начальное положение)
-    plt.scatter(1, 0, color="gray", s=100, label="Луна")
-
     # Оформление
     plt.xlabel("x")
     plt.ylabel("y")
