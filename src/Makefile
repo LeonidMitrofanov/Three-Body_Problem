@@ -65,7 +65,7 @@ plot_test: $(CSV_TEST)
 	@echo "Рисуем график для теста..."
 	@$(PlOT_TEST) $(CSV_TEST)
 
-animate: $(CSV)
+animation: $(CSV)
 	@echo "Анимируем движение тела..."
 	@$(ANIMATE_ORBITE) $(CSV)
 
