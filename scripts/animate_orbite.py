@@ -4,13 +4,13 @@ import numpy as np
 import sys
 import matplotlib.animation as animation
 
-def animate_orbit(file_path, speed=20):
+def animate_orbit(file_path, speed):
     # Загружаем данные
     data = pd.read_csv(file_path)
 
     # Извлекаем время
     t_values = data["t"].values
-    T = t_values[-1]  # Полный оборот Луны
+    T = 11.124340337
 
     # Инициализируем график
     fig, ax = plt.subplots(figsize=(8, 8))
@@ -40,8 +40,7 @@ def animate_orbit(file_path, speed=20):
     # Линия траектории тела
     trajectory, = ax.plot([], [], "r-", lw=1)
 
-    # Увеличиваем шаг для ускорения анимации
-    step = max(1, len(data) // (speed * 50))
+    step = max(1, len(data) // (speed))
 
     # Обновление кадра
     def update(frame):
@@ -78,5 +77,5 @@ if __name__ == "__main__":
         sys.exit(1)
 
     file_path = sys.argv[1]
-    speed = int(sys.argv[2]) if len(sys.argv) > 2 else 20
+    speed = int(sys.argv[2]) if len(sys.argv) > 2 else 800
     animate_orbit(file_path, speed)
