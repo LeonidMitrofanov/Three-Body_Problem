@@ -5,6 +5,9 @@ ODESolver::ODESolver(const std::function<std::vector<double>(double, const std::
                      const std::vector<double>& initialConditions, double initialStepSize,
                      const std::function<double(double, const std::vector<double>&, double)>& computeStep)
     : system_(system), y_(initialConditions), h_(initialStepSize) {
+        if (initialConditions.empty()) {
+            throw std::invalid_argument("Initial conditions vector cannot be empty");
+        }
         if (computeStep) {
             computeStep_ = computeStep;
         } else {
