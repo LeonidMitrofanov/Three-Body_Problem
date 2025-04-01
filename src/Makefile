@@ -23,7 +23,7 @@ CSV_TEST = $(CSV_PATH)/test.csv
 
 REQUIREMENTS_PATH = ../requirements.txt
 
-TO_FORMAT_FILES := $(wildcard $(*.cpp)) $(wildcard $(INCLUDE_DIR)/*.hpp) $(ODESOLVER_SRC)
+TO_FORMAT_FILES := $(wildcard *.cpp) $(wildcard $(INCLUDE_DIR)/*.hpp) $(ODESOLVER_SRC)
 FORMAT_PATH := ../materials/linters/.clang-format
 
 
