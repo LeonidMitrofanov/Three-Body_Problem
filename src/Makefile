@@ -1,10 +1,15 @@
 CC = g++
-CFLAGS = -std=c++17
+CFLAGS = -std=c++17 -I$(INCLUDE_DIR)
+LDFLAGS = -L$(LIB_DIR)
+LDLIBS = -lODESolver
 
-TARGET = orbit_solver
+INCLUDE_DIR = ../ODESolver/include
+ODESOLVER_SRC = ../ODESolver/src/ODESolver.cpp
+LIB_DIR = ../lib
+LIB_TARGET = $(LIB_DIR)/libODESolver.a
 
-MY_ODE_LIB = ../ODESolver/src/ODESolver.cpp
-SRC_FILES = orbit_solver.cpp $(MY_ODE_LIB)
+TEST_TARGET = test_solver
+MAIN_TARGET = orbit_solver
 
 PYTHON = python3
 SCRIPTS_PATH = ../scripts
@@ -18,23 +23,39 @@ CSV_TEST = $(CSV_PATH)/test.csv
 
 REQUIREMENTS_PATH = ../requirements.txt
 
+TO_FORMAT_FILES := $(wildcard $(*.cpp)) $(wildcard $(INCLUDE_DIR)/*.hpp) $(ODESOLVER_SRC)
+FORMAT_PATH := ../materials/linters/.clang-format
+
+
 all: build
 
 requirements:
 	@pip install -r $(REQUIREMENTS_PATH)
 
+$(LIB_TARGET): $(ODESOLVER_SRC)
+	@echo "Собираем $(LIB_TARGET)..."
+	@mkdir -p $(LIB_DIR)
+	@$(CC) $(CFLAGS) -c $< -o $(LIB_DIR)/ODESolver.o
+	@ar rcs $@ $(LIB_DIR)/ODESolver.o
 
-build: $(TARGET)
+$(TEST_TARGET): $(TEST_TARGET).cpp $(LIB_TARGET)
+	@echo "Собираем $(TEST_TARGET)..."
+	@$(CC) $(CFLAGS) $(LDFLAGS) -o $@ $< $(LDLIBS)
 
-$(TARGET): $(SRC_FILES)
-	@echo "Собираем $(TARGET)..."
-	@$(CC) $(CFLAGS) -o $(TARGET) $(SRC_FILES)
+$(MAIN_TARGET): $(MAIN_TARGET).cpp $(LIB_TARGET)
+	@echo "Собираем $(MAIN_TARGET)..."
+	@$(CC) $(CFLAGS) $(LDFLAGS) -o $@ $< $(LDLIBS)
 
-run: $(TARGET)
-	@./$(TARGET)
+build: $(LIB_TARGET) $(MAIN_TARGET) $(TEST_TARGET)
 
-$(CSV): run
-$(CSV_TEST): run
+run_test: $(TEST_TARGET)
+	@./$(TEST_TARGET)
+
+run_main: $(MAIN_TARGET)
+	@./$(MAIN_TARGET)
+
+$(CSV): run_main
+$(CSV_TEST): run_test
 
 plot: $(CSV)
 	@echo "Рисуем орбиту..."
@@ -45,13 +66,33 @@ plot_test: $(CSV_TEST)
 	@$(PlOT_TEST) $(CSV_TEST)
 
 animate: $(CSV)
-	@echo "Анимацию движение тела..."
+	@echo "Анимируем движение тела..."
 	@$(ANIMATE_ORBITE) $(CSV)
 
-clean: clean_csv
-	@echo "Очистка $(TARGET)..." 
-	@rm -f $(TARGET)
+# Форматирование кода
+format: check-style
+	@echo "Форматирование исходного кода с помощью clang-format..."
+	@clang-format -i -style=file:$(FORMAT_PATH) $(TO_FORMAT_FILES)
+
+# Проверка стиля кода
+check-style:
+	@echo "Проверка стиля кода с помощью clang-format..."
+	@clang-format -n -style=file:$(FORMAT_PATH) $(TO_FORMAT_FILES)
+
+clean: clean_main clean_test clean_csv clean_lib
+
+clean_main:
+	@echo "Очистка $(MAIN_TARGET)..."
+	@rm -f $(MAIN_TARGET)
+
+clean_test:
+	@echo "Очистка $(TEST_TARGET)..."
+	@rm -f $(TEST_TARGET)
 
 clean_csv:
 	@echo "Очистка csv..."
 	@rm -f $(CSV_PATH)/*.csv
+
+clean_lib:
+	@echo "Очистка библиотеки..."
+	@rm -rf $(LIB_DIR)
