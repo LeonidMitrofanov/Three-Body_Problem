@@ -11,7 +11,7 @@ def plot_orbit(file_path):
 
     # Рисуем орбиту Луны (окружность радиусом 1)
     theta = np.linspace(0, 2 * np.pi, 300)
-    moon_orbit_x = np.cos(theta)  # Окружность радиусом 1
+    moon_orbit_x = np.cos(theta)
     moon_orbit_y = np.sin(theta)
     plt.plot(moon_orbit_x, moon_orbit_y, linestyle="dashed", color="gray", label="Орбита Луны")
 
