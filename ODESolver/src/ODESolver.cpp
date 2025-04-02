@@ -21,13 +21,9 @@ ODESolver::ODESolver(
   }
 }
 
-// Метод для получения текущего состояния системы
 std::vector<double> ODESolver::getState() const { return y_; }
-
-// Метод для получения текущего шага
 double ODESolver::getStepSize() const { return h_; }
 
-// Конструктор RungeKutta4
 RungeKutta4::RungeKutta4(
     const std::function<
         std::vector<double>(double, const std::vector<double>&)>& system,
