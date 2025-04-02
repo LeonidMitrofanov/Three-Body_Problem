@@ -13,37 +13,54 @@ vector<double> threeBodySystem(double t, const vector<double>& y) {
   double vx = y[2];
   double vy = y[3];
 
-  double m = 0.012277471;  // Масса Луны
-  double M = 1 - m;        // Масса Земли
+  double m = 0.012277471;
+  double M = 1 - m;
 
   double R1 = pow((x + m) * (x + m) + y_pos * y_pos, 1.5);
   double R2 = pow((x - M) * (x - M) + y_pos * y_pos, 1.5);
 
-  double dxdt = vx;
-  double dydt = vy;
-  double dvxdt = x + 2 * vy - (M / R1) * (x + m) - m * (x - M) / R2;
-  double dvydt = y_pos - 2 * vx - (M / R1) * y_pos - m * y_pos / R2;
+  double ax = x + 2 * vy - (M / R1) * (x + m) - m * (x - M) / R2;
+  double ay = y_pos - 2 * vx - (M / R1) * y_pos - m * y_pos / R2;
 
-  return {dxdt, dydt, dvxdt, dvydt};
+  return {vx, vy, ax, ay};
 }
 
 int main() {
   const char orbit_path[] = "../data/three_body_orbit.csv";
-  vector<double> y_three_body = {
-      0.994, 0.0, 0.0,
-      -2.031732629557337};  // Начальные условия для задачи трёх тел
+  vector<double> y_three_body = {0.994, 0.0, 0.0, -2.031732629557337};
   double t_three_body = 0.0;
-  double T_three_body = 11.124340337;  // Период орбиты Аренстора
-  double h_three_body = 1e-4;          // Шаг интегрирования
+  double T_three_body = 11.124340337;
+  double h_initial = 1e-4;
 
-  // Создаём решатель для задачи трёх тел
-  RungeKutta4 solver_three_body(threeBodySystem, y_three_body, h_three_body);
+  // Функция для вычисления адаптивного шага
+  double m = 0.012277471;
+  double M = 1 - m;
+  auto computeStepThreeBody = [m, M](double x, const vector<double>& y,
+                                     double h_prev) {
+    double x_pos = y[0];
+    double y_pos = y[1];
 
-  // Открываем файл для сохранения траектории
+    // Вычисляем расстояния
+    double R1 = sqrt(pow(x_pos + m, 2) + pow(y_pos, 2));
+    double R2 = sqrt(pow(x_pos - M, 2) + pow(y_pos, 2));
+
+    // Линейная зависимость шага от минимального расстояния
+    double k = 1e-3;  // Коэффициент подбирается экспериментально
+    double h_new = k * min(R1, R2);
+
+    // Ограничиваем шаг диапазоном [h_min, h_max]
+    double h_min = 1e-6;
+    double h_max = 1e-2;
+    return clamp(h_new, h_min, h_max);
+  };
+
+  // Создаём решатель с адаптивным шагом
+  RungeKutta4 solver_three_body(threeBodySystem, y_three_body, h_initial,
+                                computeStepThreeBody);
+
   ofstream file_three_body(orbit_path);
   file_three_body << "t,x,y,vx,vy\n";
 
-  // Интегрируем уравнения до времени T_three_body
   while (t_three_body < T_three_body) {
     file_three_body << t_three_body << "," << y_three_body[0] << ","
                     << y_three_body[1] << "," << y_three_body[2] << ","
@@ -55,7 +72,7 @@ int main() {
   }
 
   file_three_body.close();
-  cout << "Задача трёх тел: Данные сохранены в " << orbit_path << endl;
+  cout << "Данные сохранены в " << orbit_path << endl;
 
   return 0;
 }
