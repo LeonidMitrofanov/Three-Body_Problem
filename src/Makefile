@@ -94,7 +94,7 @@ check-style:
 	@echo "Проверка стиля кода с помощью clang-format..."
 	@clang-format -n -style=file:$(FORMAT_PATH) $(TO_FORMAT_FILES)
 
-clean: clean_main clean_test clean_csv clean_lib
+clean: clean_main clean_test clean_error clean_csv clean_lib
 
 clean_main:
 	@echo "Очистка $(MAIN_TARGET)..."
