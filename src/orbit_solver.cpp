@@ -25,11 +25,16 @@ vector<double> threeBodySystem(double t, const vector<double>& y) {
   return {vx, vy, ax, ay};
 }
 
-int main() {
-  const char orbit_path[] = "../data/three_body_orbit.csv";
-  vector<double> y_three_body = {0.994, 0.0, 0.0, -2.031732629557337};
-  double t_three_body = 0.0;
-  double T_three_body = 11.124340337;
+int main(int argc, char* argv[]) {
+  if (argc < 2) {
+    cerr << "Usage: " << argv[0] << " <output_path>" << endl;
+    return 1;
+  }
+
+  const string path = argv[1];
+  vector<double> y = {0.994, 0.0, 0.0, -2.031732629557337};
+  double t = 0.0;
+  double T = 11.124340337;
   double h_initial = 1e-4;
 
   // Функция для вычисления адаптивного шага
@@ -55,24 +60,20 @@ int main() {
   };
 
   // Создаём решатель с адаптивным шагом
-  RungeKutta4 solver_three_body(threeBodySystem, y_three_body, h_initial,
-                                computeStepThreeBody);
+  RungeKutta4 solver(threeBodySystem, y, h_initial, computeStepThreeBody);
 
-  ofstream file_three_body(orbit_path);
-  file_three_body << "t,x,y,vx,vy\n";
+  ofstream file(path);
+  file << "t,x,y,vx,vy\n";
 
-  while (t_three_body < T_three_body) {
-    file_three_body << t_three_body << "," << y_three_body[0] << ","
-                    << y_three_body[1] << "," << y_three_body[2] << ","
-                    << y_three_body[3] << "\n";
+  while (t < T) {
+    file << t << "," << y[0] << "," << y[1] << "," << y[2] << "," << y[3]
+         << "\n";
 
-    solver_three_body.step(t_three_body);
-    y_three_body = solver_three_body.getState();
-    t_three_body += solver_three_body.getStepSize();
+    solver.step(t);
+    y = solver.getState();
+    t += solver.getStepSize();
   }
 
-  file_three_body.close();
-  cout << "Данные сохранены в " << orbit_path << endl;
-
+  file.close();
   return 0;
 }

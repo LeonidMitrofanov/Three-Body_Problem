@@ -38,8 +38,14 @@ vector<double> get_error(double h) {
   return {error_y1, error_y2};
 }
 
-int main() {
-  const char path[] = "../data/test_error.csv";
+int main(int argc, char* argv[]) {
+  // Проверка наличия аргумента
+  if (argc < 2) {
+    cerr << "Usage: " << argv[0] << " <output_path>" << endl;
+    return 1;
+  }
+  const string path = argv[1];
+
   vector<double> errors;
   double errors_h4_y1, errors_h4_y2;
   double step = 2e-3;
@@ -51,7 +57,7 @@ int main() {
     errors = get_error(h);
     errors_h4_y1 = errors[0] / pow(h, 4);
     errors_h4_y2 = errors[1] / pow(h, 4);
-    file << h << ',' << errors[0] << ',' << errors_h4_y1 << ',' <<
-    errors[1] << ',' << errors_h4_y2 <<"\n";
+    file << h << ',' << errors[0] << ',' << errors_h4_y1 << ',' << errors[1]
+         << ',' << errors_h4_y2 << "\n";
   }
 }

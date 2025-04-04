@@ -57,16 +57,21 @@ $(ERROR_TARGET): $(TEST_DIR)/test_error.cpp $(LIB_TARGET)
 
 build: $(LIB_TARGET) $(MAIN_TARGET) $(TEST_TARGET) $(ERROR_TARGET)
 
-calc: calc_test calc_main calc_error
+calc: calc_main
 
-calc_test: $(TEST_TARGET)
-	@$(TEST_TARGET)
+calc_all: calc_test calc_error calc_main
 
 calc_main: $(MAIN_TARGET)
-	@$(MAIN_TARGET)
+	@echo "Производим вычисления для $(CSV)..."
+	@$(MAIN_TARGET) $(CSV)
+
+calc_test: $(TEST_TARGET)
+	@echo "Производим вычисления для $(CSV_TEST)..."
+	@$(TEST_TARGET) $(CSV_TEST)
 	
 calc_error: $(ERROR_TARGET)
-	@$(ERROR_TARGET)
+	@echo "Производим вычисления для $(CSV_ERROR)..."
+	@$(ERROR_TARGET) $(CSV_ERROR)
 
 $(CSV): calc_main
 $(CSV_TEST): calc_test
