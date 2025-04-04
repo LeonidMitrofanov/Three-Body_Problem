@@ -73,7 +73,7 @@ def animate_orbit(file_path, speed):
 
 if __name__ == "__main__":
     if len(sys.argv) < 2:
-        print("Использование: python animate_orbit.py путь_к_файлу [скорость]")
+        print(f"Usage: python {sys.argv[0]} <file_path> [speed]")
         sys.exit(1)
 
     file_path = sys.argv[1]

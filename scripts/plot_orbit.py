@@ -32,7 +32,7 @@ def plot_orbit(file_path):
 
 if __name__ == "__main__":
     if len(sys.argv) != 2:
-        print("Использование: python plot_orbit.py путь_к_файлу")
+        print(f"Usage: python {sys.argv[0]} <file_path>")
         sys.exit(1)
     
     plot_orbit(sys.argv[1])
