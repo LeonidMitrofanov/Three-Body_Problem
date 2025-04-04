@@ -8,10 +8,12 @@ ODESOLVER_SRC = ../ODESolver/src/ODESolver.cpp
 LIB_DIR = ../lib
 LIB_TARGET = $(LIB_DIR)/libODESolver.a
 
+BIN_DIR = ../bin
+
 TEST_DIR = test
-TEST_TARGET = $(TEST_DIR)/test_solver
-ERROR_TARGET = $(TEST_DIR)/test_error
-MAIN_TARGET = orbit_solver
+TEST_TARGET = $(BIN_DIR)/test_solver
+ERROR_TARGET = $(BIN_DIR)/test_error
+MAIN_TARGET = $(BIN_DIR)/orbit_solver
 
 PYTHON = python3
 SCRIPTS_DIR = ../scripts
@@ -37,34 +39,34 @@ req-install:
 
 $(LIB_TARGET): $(ODESOLVER_SRC)
 	@echo "Собираем $(LIB_TARGET)..."
-	@mkdir -p $(LIB_DIR)
-	@$(CC) $(CFLAGS) -c $< -o $(LIB_DIR)/ODESolver.o
-	@ar rcs $@ $(LIB_DIR)/ODESolver.o
+	@mkdir -p $(LIB_DIR) $(BIN_DIR)
+	@$(CC) $(CFLAGS) -c $< -o $(BIN_DIR)/ODESolver.o
+	@ar rcs $@ $(BIN_DIR)/ODESolver.o
 
-$(TEST_TARGET): $(TEST_TARGET).cpp $(LIB_TARGET)
+$(TEST_TARGET): $(TEST_DIR)/test_solver.cpp $(LIB_TARGET)
 	@echo "Собираем $(TEST_TARGET)..."
 	@$(CC) $(CFLAGS) $(LDFLAGS) -o $@ $< $(LDLIBS)
 
-$(MAIN_TARGET): $(MAIN_TARGET).cpp $(LIB_TARGET)
+$(MAIN_TARGET): orbit_solver.cpp $(LIB_TARGET)
 	@echo "Собираем $(MAIN_TARGET)..."
 	@$(CC) $(CFLAGS) $(LDFLAGS) -o $@ $< $(LDLIBS)
 
-$(ERROR_TARGET): $(ERROR_TARGET).cpp $(LIB_TARGET)
+$(ERROR_TARGET): $(TEST_DIR)/test_error.cpp $(LIB_TARGET)
 	@echo "Собираем $(ERROR_TARGET)..."
 	@$(CC) $(CFLAGS) $(LDFLAGS) -o $@ $< $(LDLIBS)
 
-build: $(LIB_TARGET) $(MAIN_TARGET) $(TEST_TARGET)
+build: $(LIB_TARGET) $(MAIN_TARGET) $(TEST_TARGET) $(ERROR_TARGET)
 
 calc: calc_test calc_main calc_error
 
 calc_test: $(TEST_TARGET)
-	@./$(TEST_TARGET)
+	@$(TEST_TARGET)
 
 calc_main: $(MAIN_TARGET)
-	@./$(MAIN_TARGET)
+	@$(MAIN_TARGET)
 	
 calc_error: $(ERROR_TARGET)
-	@./$(ERROR_TARGET)
+	@$(ERROR_TARGET)
 
 $(CSV): calc_main
 $(CSV_TEST): calc_test
@@ -114,4 +116,4 @@ clean_csv:
 
 clean_lib:
 	@echo "Очистка библиотеки..."
-	@rm -rf $(LIB_DIR)
+	@rm -rf $(LIB_DIR)/*.a $(BIN_DIR)/ODESolver.o
