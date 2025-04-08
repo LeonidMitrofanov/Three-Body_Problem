@@ -90,9 +90,17 @@ make calc_error
 ### 5. Визуализация:
 Для построения графика на основе тестовых данных:
 ```bash
-make plot_test
+make plot_error
 ```
-![til](./materials/test_plot.png)
+![til](./materials/error_plot.png)
+
+### 6. Рисование орбиты тела:
+
+Для визуализации орбиты спутника используйте команду:
+```bash
+make plot
+```
+![til](./materials/orbit_plot.png)
 
 Для построения графика ошибки вычислений на тестовых данных:
 ```bash
@@ -113,7 +121,7 @@ make animation
 ![til](./materials/orbit_animation.gif)
 
 
-### 6. Очистка:
+### 7. Очистка:
 Для удаление скомпилированных файлов и данных используйте:
 ```bash
 make clean
