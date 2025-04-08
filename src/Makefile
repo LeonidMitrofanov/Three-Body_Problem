@@ -1,12 +1,12 @@
 CC = g++
-CFLAGS = -std=c++17 -I$(INCLUDE_DIR)
+CFLAGS = -std=c++17
 LDFLAGS = -L$(LIB_DIR)
-LDLIBS = -lODESolver
+LDLIBS = -lODESolvers
 
-INCLUDE_DIR = ../ODESolver/include
-ODESOLVER_SRC = ../ODESolver/src/ODESolver.cpp
+INCLUDE_DIR = ../ODESolvers/include
+ODESOLVERS_SRC = ../ODESolvers/src/*cpp
 LIB_DIR = ../lib
-LIB_TARGET = $(LIB_DIR)/libODESolver.a
+LIB_TARGET = $(LIB_DIR)/libODESolvers.a
 
 BIN_DIR = ../bin
 
@@ -29,7 +29,7 @@ CSV_ERROR = $(CSV_PATH)/test_error.csv
 
 REQUIREMENTS_PATH = ../requirements.txt
 
-TO_FORMAT_FILES := $(wildcard *.cpp) $(wildcard $(INCLUDE_DIR)/*.hpp) $(ODESOLVER_SRC) $(wildcard $(TEST_DIR)/*.cpp)
+TO_FORMAT_FILES := $(wildcard *.cpp) $(wildcard $(INCLUDE_DIR)/*.hpp) $(ODESOLVERS_SRC) $(wildcard $(TEST_DIR)/*.cpp)
 FORMAT_PATH := ../materials/linters/.clang-format
 
 all: calc
@@ -37,10 +37,11 @@ all: calc
 req-install:
 	@pip install -r $(REQUIREMENTS_PATH)
 
-$(LIB_TARGET): $(ODESOLVER_SRC)
+lib: $(LIB_TARGET)
+$(LIB_TARGET): $(ODESOLVERS_SRC)
 	@echo "Собираем $(LIB_TARGET)..."
 	@mkdir -p $(LIB_DIR) $(BIN_DIR)
-	@$(CC) $(CFLAGS) -c $< -o $(BIN_DIR)/ODESolver.o
+	@$(CC) $(CFLAGS) -I$(INCLUDE_DIR) -c $< -o $(BIN_DIR)/ODESolver.o
 	@ar rcs $@ $(BIN_DIR)/ODESolver.o
 
 $(TEST_TARGET): $(TEST_DIR)/test_solver.cpp $(LIB_TARGET)

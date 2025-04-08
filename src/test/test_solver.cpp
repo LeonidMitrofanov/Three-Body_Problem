@@ -3,7 +3,7 @@
 #include <iostream>
 #include <vector>
 
-#include "../../ODESolver/include/ODESolvers.hpp"
+#include "../../ODESolvers/include/RungeKutta4.hpp"
 
 using namespace std;
 
@@ -40,9 +40,9 @@ int main(int argc, char* argv[]) {
     file << t << ',' << y[0] << ',' << y[1] << ',' << y1(t) << ',' << y2(t)
          << "\n";
 
-    solver.step(t);
+    solver.make_step(h);
     y = solver.getState();
-    t += solver.getStepSize();
+    t = solver.getParam();
   }
 
   file.close();

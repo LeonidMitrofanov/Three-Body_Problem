@@ -24,4 +24,4 @@ if __name__ == "__main__":
         print(f"Usage: python {sys.argv[0]} <file_path>")
         sys.exit(1)
 
-    plot_test(sys.argv[1:])
+    plot_test(sys.argv[1])

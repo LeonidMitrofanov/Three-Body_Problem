@@ -3,7 +3,7 @@
 #include <iostream>
 #include <vector>
 
-#include "../../ODESolver/include/ODESolvers.hpp"
+#include "../../ODESolvers/include/RungeKutta4.hpp"
 
 using namespace std;
 
@@ -22,18 +22,18 @@ double y2(double x) { return sin(x) / sqrt(1 + exp(2 * x)); }
 
 vector<double> get_error(double h) {
   vector<double> y = {1.0 / sqrt(2), 0.0};
-  double t = 0.0;
-  double T = 5.0;
-  RungeKutta4 solver(testSystem, y, h);
+  double t_cur = 0.0;
+  double t_end = 5.0;
+  RungeKutta4 solver(testSystem, y, 0);
 
   double error_y1 = 0;
   double error_y2 = 0;
-  while (t < T) {
-    error_y1 = max(error_y1, abs(y1(t) - y[0]));
-    error_y2 = max(error_y2, abs(y2(t) - y[1]));
-    solver.step(t);
+  while (t_cur < t_end) {
+    error_y1 = max(error_y1, abs(y1(t_cur) - y[0]));
+    error_y2 = max(error_y2, abs(y2(t_cur) - y[1]));
+    solver.make_step(h);
     y = solver.getState();
-    t += solver.getStepSize();
+    t_cur = solver.getParam();
   }
   return {error_y1, error_y2};
 }
