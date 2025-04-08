@@ -1,1 +1,6 @@
 data/*.csv
+lib/*
+bin/*
+
+.DS_Store
+.vscode

@@ -1,17 +1,19 @@
 CC = g++
-CFLAGS = -std=c++17 -I$(INCLUDE_DIR)
+CFLAGS = -std=c++17
 LDFLAGS = -L$(LIB_DIR)
-LDLIBS = -lODESolver
+LDLIBS = -lODESolvers
 
-INCLUDE_DIR = ../ODESolver/include
-ODESOLVER_SRC = ../ODESolver/src/ODESolver.cpp
+INCLUDE_DIR = ../ODESolvers/include
+ODESOLVERS_SRC = ../ODESolvers/src/*cpp
 LIB_DIR = ../lib
-LIB_TARGET = $(LIB_DIR)/libODESolver.a
+LIB_TARGET = $(LIB_DIR)/libODESolvers.a
+
+BIN_DIR = ../bin
 
 TEST_DIR = test
-TEST_TARGET = $(TEST_DIR)/test_solver
-ERROR_TARGET = $(TEST_DIR)/test_error
-MAIN_TARGET = orbit_solver
+TEST_TARGET = $(BIN_DIR)/test_solver
+ERROR_TARGET = $(BIN_DIR)/test_error
+MAIN_TARGET = $(BIN_DIR)/orbit_solver
 
 PYTHON = python3
 SCRIPTS_DIR = ../scripts
@@ -27,7 +29,7 @@ CSV_ERROR = $(CSV_PATH)/test_error.csv
 
 REQUIREMENTS_PATH = ../requirements.txt
 
-TO_FORMAT_FILES := $(wildcard *.cpp) $(wildcard $(INCLUDE_DIR)/*.hpp) $(ODESOLVER_SRC) $(wildcard $(TEST_DIR)/*.cpp)
+TO_FORMAT_FILES := $(wildcard *.cpp) $(wildcard $(INCLUDE_DIR)/*.hpp) $(ODESOLVERS_SRC) $(wildcard $(TEST_DIR)/*.cpp)
 FORMAT_PATH := ../materials/linters/.clang-format
 
 all: calc
@@ -35,36 +37,42 @@ all: calc
 req-install:
 	@pip install -r $(REQUIREMENTS_PATH)
 
-$(LIB_TARGET): $(ODESOLVER_SRC)
+lib: $(LIB_TARGET)
+$(LIB_TARGET): $(ODESOLVERS_SRC)
 	@echo "Собираем $(LIB_TARGET)..."
-	@mkdir -p $(LIB_DIR)
-	@$(CC) $(CFLAGS) -c $< -o $(LIB_DIR)/ODESolver.o
-	@ar rcs $@ $(LIB_DIR)/ODESolver.o
+	@mkdir -p $(LIB_DIR) $(BIN_DIR)
+	@$(CC) $(CFLAGS) -I$(INCLUDE_DIR) -c $< -o $(BIN_DIR)/ODESolver.o
+	@ar rcs $@ $(BIN_DIR)/ODESolver.o
 
-$(TEST_TARGET): $(TEST_TARGET).cpp $(LIB_TARGET)
+$(TEST_TARGET): $(TEST_DIR)/test_solver.cpp $(LIB_TARGET)
 	@echo "Собираем $(TEST_TARGET)..."
 	@$(CC) $(CFLAGS) $(LDFLAGS) -o $@ $< $(LDLIBS)
 
-$(MAIN_TARGET): $(MAIN_TARGET).cpp $(LIB_TARGET)
+$(MAIN_TARGET): orbit_solver.cpp $(LIB_TARGET)
 	@echo "Собираем $(MAIN_TARGET)..."
 	@$(CC) $(CFLAGS) $(LDFLAGS) -o $@ $< $(LDLIBS)
 
-$(ERROR_TARGET): $(ERROR_TARGET).cpp $(LIB_TARGET)
+$(ERROR_TARGET): $(TEST_DIR)/test_error.cpp $(LIB_TARGET)
 	@echo "Собираем $(ERROR_TARGET)..."
 	@$(CC) $(CFLAGS) $(LDFLAGS) -o $@ $< $(LDLIBS)
 
-build: $(LIB_TARGET) $(MAIN_TARGET) $(TEST_TARGET)
+build: $(LIB_TARGET) $(MAIN_TARGET) $(TEST_TARGET) $(ERROR_TARGET)
 
-calc: calc_test calc_main calc_error
+calc: calc_main
 
-calc_test: $(TEST_TARGET)
-	@./$(TEST_TARGET)
+calc_all: calc_test calc_error calc_main
 
 calc_main: $(MAIN_TARGET)
-	@./$(MAIN_TARGET)
+	@echo "Производим вычисления для $(CSV)..."
+	@$(MAIN_TARGET) $(CSV)
+
+calc_test: $(TEST_TARGET)
+	@echo "Производим вычисления для $(CSV_TEST)..."
+	@$(TEST_TARGET) $(CSV_TEST)
 	
 calc_error: $(ERROR_TARGET)
-	@./$(ERROR_TARGET)
+	@echo "Производим вычисления для $(CSV_ERROR)..."
+	@$(ERROR_TARGET) $(CSV_ERROR)
 
 $(CSV): calc_main
 $(CSV_TEST): calc_test
@@ -114,4 +122,4 @@ clean_csv:
 
 clean_lib:
 	@echo "Очистка библиотеки..."
-	@rm -rf $(LIB_DIR)
+	@rm -rf $(LIB_DIR)/*.a $(BIN_DIR)/ODESolver.o

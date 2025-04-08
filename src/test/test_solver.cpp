@@ -3,7 +3,7 @@
 #include <iostream>
 #include <vector>
 
-#include "../../ODESolver/include/ODESolvers.hpp"
+#include "../../ODESolvers/include/RungeKutta4.hpp"
 
 using namespace std;
 
@@ -20,8 +20,13 @@ vector<double> testSystem(double t, const vector<double>& y) {
 double y1(double x) { return cos(x) / sqrt(1 + exp(2 * x)); }
 double y2(double x) { return sin(x) / sqrt(1 + exp(2 * x)); }
 
-int main() {
-  const char path[] = "../data/test.csv";
+int main(int argc, char* argv[]) {
+  if (argc < 2) {
+    cerr << "Usage: " << argv[0] << " <output_path>" << endl;
+    return 1;
+  }
+
+  const string path = argv[1];
   vector<double> y = {1.0 / sqrt(2), 0.0};
   double t = 0.0;
   double T = 5.0;
@@ -35,13 +40,11 @@ int main() {
     file << t << ',' << y[0] << ',' << y[1] << ',' << y1(t) << ',' << y2(t)
          << "\n";
 
-    solver.step(t);
+    solver.make_step(h);
     y = solver.getState();
-    t += solver.getStepSize();
+    t = solver.getParam();
   }
 
   file.close();
-  cout << "Тестовая задача: Данные сохранены в " << path << endl;
-
   return 0;
 }
