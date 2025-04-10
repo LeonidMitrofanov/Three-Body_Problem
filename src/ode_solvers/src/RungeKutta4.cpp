@@ -1,4 +1,4 @@
-#include "../include/RungeKutta4.hpp"
+#include "../include/ode_solvers.hpp"
 
 void RungeKutta4::make_step(double stepSize) {
   const size_t n = currentState_.size();

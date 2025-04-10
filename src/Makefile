@@ -1,16 +1,26 @@
-CC = g++
+CC = clang++
 CFLAGS = -std=c++17
 LDFLAGS = -L$(LIB_DIR)
-LDLIBS = -lODESolvers
+LDLIBS = -lode_solvers -lode_models
 
-INCLUDE_DIR = ../ODESolvers/include
-ODESOLVERS_SRC = ../ODESolvers/src/*cpp
+SOLVERS_DIR = ode_solvers
+SOLVERS_INCLUDE_DIR = $(SOLVERS_DIR)/include
+SOLVERS_SRC = $(SOLVERS_DIR)/src/*cpp
+
+MODELS_DIR = ode_models
+MODELS_INCLUDE_DIR = $(MODELS_DIR)/include
+MODELS_SRC = $(MODELS_DIR)/src/*cpp
+
 LIB_DIR = ../lib
-LIB_TARGET = $(LIB_DIR)/libODESolvers.a
+LIB_SOLVERS_TARGET = $(LIB_DIR)/libode_solvers.a
+LIB_MODELS_TARGET = $(LIB_DIR)/libode_models.a
+
+APPS_DIR = apps
 
 BIN_DIR = ../bin
+BUILD_DIR = ../build
 
-TEST_DIR = test
+TEST_DIR = tests
 TEST_TARGET = $(BIN_DIR)/test_solver
 ERROR_TARGET = $(BIN_DIR)/test_error
 MAIN_TARGET = $(BIN_DIR)/orbit_solver
@@ -22,44 +32,54 @@ PlOT_TEST = $(PYTHON) $(SCRIPTS_DIR)/plot_test.py
 PlOT_ERROR = $(PYTHON) $(SCRIPTS_DIR)/plot_error.py
 ANIMATE_ORBITE = $(PYTHON) $(SCRIPTS_DIR)/animate_orbite.py
 
-CSV_PATH = ../data
-CSV = $(CSV_PATH)/three_body_orbit.csv
-CSV_TEST = $(CSV_PATH)/test.csv
-CSV_ERROR = $(CSV_PATH)/test_error.csv
+CSV_DIR = ../data
+CSV = $(CSV_DIR)/three_body_orbit.csv
+CSV_TEST = $(CSV_DIR)/test.csv
+CSV_ERROR = $(CSV_DIR)/test_error.csv
 
-REQUIREMENTS_PATH = ../requirements.txt
+REQUIREMENTS_DIR = ../requirements.txt
 
-TO_FORMAT_FILES := $(wildcard *.cpp) $(wildcard $(INCLUDE_DIR)/*.hpp) $(ODESOLVERS_SRC) $(wildcard $(TEST_DIR)/*.cpp)
-FORMAT_PATH := ../materials/linters/.clang-format
+TO_FORMAT_FILES := $(wildcard *.cpp) $(wildcard $(SOLVERS_INCLUDE_DIR)/*.hpp) $(SOLVERS_SRC) $(wildcard $(TEST_DIR)/*.cpp)
+FORMAT := ../materials/linters/.clang-format
 
 all: calc
 
 req-install:
-	@pip install -r $(REQUIREMENTS_PATH)
+	@pip install -r $(REQUIREMENTS_DIR)
 
-lib: $(LIB_TARGET)
-$(LIB_TARGET): $(ODESOLVERS_SRC)
-	@echo "Собираем $(LIB_TARGET)..."
-	@mkdir -p $(LIB_DIR) $(BIN_DIR)
-	@$(CC) $(CFLAGS) -I$(INCLUDE_DIR) -c $< -o $(BIN_DIR)/ODESolver.o
-	@ar rcs $@ $(BIN_DIR)/ODESolver.o
+solvers: $(LIB_SOLVERS_TARGET)
+$(LIB_SOLVERS_TARGET): $(wildcard $(SOLVERS_SRC))
+	@echo "Собираем $(LIB_SOLVERS_TARGET)..."
+	@mkdir -p $(LIB_DIR) $(BUILD_DIR) $(BIN_DIR)
+	@for file in $^; do \
+		$(CC) $(CFLAGS) -I$(SOLVERS_INCLUDE_DIR) -c $$file -o $(BUILD_DIR)/$$(basename $$(basename $$file)).o; \
+	done
+	@ar rcs $@ $(BUILD_DIR)/*.o
 
-$(TEST_TARGET): $(TEST_DIR)/test_solver.cpp $(LIB_TARGET)
-	@echo "Собираем $(TEST_TARGET)..."
-	@$(CC) $(CFLAGS) $(LDFLAGS) -o $@ $< $(LDLIBS)
+$(LIB_MODELS_TARGET): $(wildcard $(MODELS_SRC))
+	@echo "Собираем $(LIB_MODELS_TARGET)..."
+	@mkdir -p $(LIB_DIR) $(BUILD_DIR) $(BIN_DIR)
+	@for file in $^; do \
+		obj=$$(basename $$(basename $$file)).o; \
+		$(CC) $(CFLAGS) -I$(MODELS_INCLUDE_DIR) -c $$file -o $(BUILD_DIR)/$$obj; \
+	done
+	@ar rcs $@ $(BUILD_DIR)/*.o
 
-$(MAIN_TARGET): orbit_solver.cpp $(LIB_TARGET)
+$(MAIN_TARGET): $(APPS_DIR)/orbit_solver.cpp $(LIB_SOLVERS_TARGET) $(LIB_MODELS_TARGET)
 	@echo "Собираем $(MAIN_TARGET)..."
 	@$(CC) $(CFLAGS) $(LDFLAGS) -o $@ $< $(LDLIBS)
 
-$(ERROR_TARGET): $(TEST_DIR)/test_error.cpp $(LIB_TARGET)
+$(TEST_TARGET): $(TEST_DIR)/test_solver.cpp $(LIB_SOLVERS_TARGET) $(LIB_MODELS_TARGET)
+	@echo "Собираем $(TEST_TARGET)..."
+	@$(CC) $(CFLAGS) $(LDFLAGS) -o $@ $< $(LDLIBS)
+
+$(ERROR_TARGET): $(TEST_DIR)/test_error.cpp $(LIB_SOLVERS_TARGET) $(LIB_MODELS_TARGET)
 	@echo "Собираем $(ERROR_TARGET)..."
 	@$(CC) $(CFLAGS) $(LDFLAGS) -o $@ $< $(LDLIBS)
 
-build: $(LIB_TARGET) $(MAIN_TARGET) $(TEST_TARGET) $(ERROR_TARGET)
+build: $(LIB_SOLVERS_TARGET) $(MAIN_TARGET) $(TEST_TARGET) $(ERROR_TARGET)
 
 calc: calc_main
-
 calc_all: calc_test calc_error calc_main
 
 calc_main: $(MAIN_TARGET)
@@ -96,30 +116,28 @@ animation: $(CSV)
 
 format: check-style
 	@echo "Форматирование исходного кода с помощью clang-format..."
-	@clang-format -i -style=file:$(FORMAT_PATH) $(TO_FORMAT_FILES)
+	@clang-format -i -style=file:$(FORMAT) $(TO_FORMAT_FILES)
 
 check-style:
 	@echo "Проверка стиля кода с помощью clang-format..."
-	@clang-format -n -style=file:$(FORMAT_PATH) $(TO_FORMAT_FILES)
+	@clang-format -n -style=file:$(FORMAT) $(TO_FORMAT_FILES)
 
-clean: clean_main clean_test clean_error clean_csv clean_lib
+clean: clean_build clean_bin clean_lib clean_csv
 
-clean_main:
-	@echo "Очистка $(MAIN_TARGET)..."
+clean_bin:
+	@echo "Очистка $(BIN_DIR)..."
 	@rm -f $(MAIN_TARGET)
-
-clean_test:
-	@echo "Очистка $(TEST_TARGET)..."
 	@rm -f $(TEST_TARGET)
-
-clean_error:
-	@echo "Очистка $(ERROR_TARGET)..."
 	@rm -f $(ERROR_TARGET)
 
+clean_build:
+	@echo "Очистка $(BIN_DIR)..."
+	@rm -f $(CSV_DIR)/*.csv
+
 clean_csv:
-	@echo "Очистка csv..."
-	@rm -f $(CSV_PATH)/*.csv
+	@echo "Очистка $(CSV_DIR)..."
+	@rm -f $(CSV_DIR)/*.csv
 
 clean_lib:
-	@echo "Очистка библиотеки..."
-	@rm -rf $(LIB_DIR)/*.a $(BIN_DIR)/ODESolver.o
+	@echo "Очистка $(LIB_DIR)..."
+	@rm -rf $(LIB_DIR)/*.a

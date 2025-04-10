@@ -3,19 +3,10 @@
 #include <iostream>
 #include <vector>
 
-#include "../../ODESolvers/include/RungeKutta4.hpp"
+#include "../ode_solvers/include/ode_solvers.hpp"
+#include "../ode_models/include/ode_models.hpp"
 
 using namespace std;
-
-vector<double> testSystem(double t, const vector<double>& y) {
-  double y1 = y[0];
-  double y2 = y[1];
-
-  double dy1dt = -y2 + y1 * (y1 * y1 + y2 * y2 - 1);
-  double dy2dt = y1 + y2 * (y1 * y1 + y2 * y2 - 1);
-
-  return {dy1dt, dy2dt};
-}
 
 double y1(double x) { return cos(x) / sqrt(1 + exp(2 * x)); }
 double y2(double x) { return sin(x) / sqrt(1 + exp(2 * x)); }
@@ -24,7 +15,7 @@ vector<double> get_error(double h) {
   vector<double> y = {1.0 / sqrt(2), 0.0};
   double t_cur = 0.0;
   double t_end = 5.0;
-  RungeKutta4 solver(testSystem, y, 0);
+  RungeKutta4 solver(testEquation, y, 0);
 
   double error_y1 = 0;
   double error_y2 = 0;

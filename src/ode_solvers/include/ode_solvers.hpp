@@ -1,6 +1,7 @@
 #ifndef ODESOLVER_HPP
 #define ODESOLVER_HPP
 
+#include <algorithm>
 #include <functional>
 #include <vector>
 
@@ -24,6 +25,12 @@ class ODESolver {
   ODE differentialEquation_;
   vector<double> currentState_;
   double param_;
+};
+
+class RungeKutta4 : public ODESolver {
+ public:
+  using ODESolver::ODESolver;
+  void make_step(double stepSize) override;
 };
 
 #endif  // ODESOLVER_HPP
